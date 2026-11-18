@@ -68,9 +68,12 @@ jobs:
         run: nix build -L .#checks.x86_64-linux.shellcheck
       - name: gpu-detect check (sandboxed)
         run: nix build -L .#checks.x86_64-linux.gpu-detect
-      - name: nixfmt (advisory until the tree is formatted once)
-        continue-on-error: true
-        run: nix build -L .#checks.x86_64-linux.nix-format
+      - name: nixfmt (shows the exact diff when files are not formatted)
+        run: |
+          nix fmt -- $(git ls-files '*.nix')
+          git diff --stat
+          git diff
+          git diff --quiet
 
   # ------------------------------------------------------------------------
   vm-tests:
