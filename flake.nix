@@ -37,7 +37,12 @@
         desktop-nvidia = [ ./hosts/desktop-nvidia ];
         desktop-nvidia-legacy = [ ./hosts/desktop-nvidia-legacy ];
         virtual-machine = [ ./hosts/virtual-machine ];
+        vm-minimal = [ ./hosts/vm-minimal ];
         installation-iso = [ ./hosts/installation-iso ];
+      }
+      # Written by freutigo-install on an installed machine.
+      // lib.optionalAttrs (builtins.pathExists ./hosts/local/default.nix) {
+        local = [ ./hosts/local ];
       };
 
       nixosConfigurations = lib.mapAttrs (_: mkSystem) hosts;
@@ -75,8 +80,13 @@
       packages.${system} = {
         freutigo-gpu-diagnostics = pkgs.callPackage ./packages/freutigo-gpu-diagnostics { };
         freutigo-benchmark = pkgs.callPackage ./packages/freutigo-benchmark { };
+        freutigo-detect-gpu = pkgs.callPackage ./packages/freutigo-detect-gpu { };
+        freutigo-install = pkgs.callPackage ./packages/freutigo-install {
+          inherit (self.packages.${system}) freutigo-detect-gpu;
+        };
         iso = nixosConfigurations.installation-iso.config.system.build.isoImage;
         vm = nixosConfigurations.virtual-machine.config.system.build.vm;
+        vm-minimal = nixosConfigurations.vm-minimal.config.system.build.vm;
         default = self.packages.${system}.iso;
       };
 
@@ -124,9 +134,29 @@
             touch $out
           '';
 
+          # GPU auto-detection against fake sysfs fixtures (no hardware).
+          gpu-detect =
+            pkgs.runCommand "freutigo-gpu-detect-tests"
+              {
+                nativeBuildInputs = with pkgs; [
+                  bash
+                  coreutils
+                  gawk
+                  gnugrep
+                  gnused
+                ];
+              }
+              ''
+                bash ${./tests/gpu-detect/run.sh} ${./scripts/detect-gpu-profile.sh}
+                touch $out
+              '';
+
           # Boots the core system in QEMU and checks essential services.
           # Requires KVM on the build machine.
           vmtest-core = import ./tests/core-boot.nix { inherit pkgs self freutigoLib; };
+
+          # Boots the desktop VM host to the SDDM greeter and logs in.
+          vmtest-desktop = import ./tests/desktop-boot.nix { inherit pkgs self freutigoLib; };
         };
     };
 }

@@ -12,5 +12,6 @@ lib.mkIf (config.freutigo.hardware.gpuProfile != "none") {
     pkgs.vulkan-tools # vulkaninfo, vkcube
     pkgs.mesa-demos # glxinfo, eglinfo
     self.packages.${pkgs.stdenv.hostPlatform.system}.freutigo-gpu-diagnostics
+    self.packages.${pkgs.stdenv.hostPlatform.system}.freutigo-detect-gpu
   ];
 }

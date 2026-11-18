@@ -14,6 +14,7 @@
 }:
 let
   cfg = config.freutigo.iso;
+  freutigoPkgs = self.packages.${pkgs.stdenv.hostPlatform.system};
 in
 {
   imports = [
@@ -68,8 +69,64 @@ in
 
     environment.systemPackages = [
       pkgs.git
-      self.packages.${pkgs.stdenv.hostPlatform.system}.freutigo-gpu-diagnostics
+      freutigoPkgs.freutigo-gpu-diagnostics
+      freutigoPkgs.freutigo-detect-gpu
+      freutigoPkgs.freutigo-install
     ];
+
+    services.getty.helpLine = lib.mkForce ''
+
+      ┌─ Freutigo Aero OS ${config.freutigo.version} installer ─────────────────────────┐
+      │ Install:          sudo freutigo-install                     │
+      │ Wi-Fi / network:  nmtui                                     │
+      │ Check graphics:   freutigo-detect-gpu                       │
+      │ Manual install:   /etc/freutigo/source/docs/INSTALL.md      │
+      └─────────────────────────────────────────────────────────────┘
+    '';
+
+    # Unattended installation: only when a disk labelled FREUTIGO_AUTO with
+    # an answers.env file is attached. The answers file must itself name the
+    # disk to erase (CONFIRM_ERASE), so this cannot erase anything by accident.
+    systemd.services.freutigo-autoinstall = {
+      description = "Freutigo unattended installation (FREUTIGO_AUTO disk)";
+      wantedBy = [ "multi-user.target" ];
+      after = [
+        "network-online.target"
+        "systemd-udev-settle.service"
+      ];
+      wants = [ "network-online.target" ];
+      path = [
+        "/run/current-system/sw"
+        freutigoPkgs.freutigo-install
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        StandardOutput = "journal+console";
+      };
+      script = ''
+        for _ in $(seq 1 10); do
+          [ -e /dev/disk/by-label/FREUTIGO_AUTO ] && break
+          sleep 1
+        done
+        [ -e /dev/disk/by-label/FREUTIGO_AUTO ] || exit 0
+        mkdir -p /run/freutigo-auto
+        mount -o ro /dev/disk/by-label/FREUTIGO_AUTO /run/freutigo-auto
+        cp /run/freutigo-auto/answers.env /run/freutigo-answers.env
+        umount /run/freutigo-auto
+        echo "FREUTIGO-AUTOINSTALL start" > /dev/ttyS0 || true
+        if freutigo-install --answers /run/freutigo-answers.env 2>&1 | tee /dev/ttyS0; then
+          echo "FREUTIGO-AUTOINSTALL success" > /dev/ttyS0 || true
+        else
+          echo "FREUTIGO-AUTOINSTALL failed" > /dev/ttyS0 || true
+          tail -n 80 /tmp/freutigo-install.log > /dev/ttyS0 || true
+          systemctl poweroff
+        fi
+      '';
+    };
+
+    # Ship the pinned nixpkgs source so installing from the flake needs no
+    # GitHub download (binary packages still come from cache.nixos.org).
+    system.extraDependencies = [ self.inputs.nixpkgs.outPath ];
 
     isoImage.storeContents = lib.optional (cfg.includeTargetClosure != null)
       self.nixosConfigurations.${cfg.includeTargetClosure}.config.system.build.toplevel;

@@ -11,6 +11,7 @@
     ./core/security.nix
     ./core/storage.nix
     ./core/users.nix
+    ./core/testing.nix
 
     ./hardware
     ./desktop
