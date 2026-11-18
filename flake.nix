@@ -69,8 +69,7 @@
       # all assertions) without building it. The drvPath string context is
       # discarded so the check itself does not depend on the system closure.
       evalCheck =
-        name: drv:
-        pkgs.writeText "freutigo-eval-${name}" (builtins.unsafeDiscardStringContext drv.drvPath);
+        name: drv: pkgs.writeText "freutigo-eval-${name}" (builtins.unsafeDiscardStringContext drv.drvPath);
     in
     {
       inherit nixosConfigurations;

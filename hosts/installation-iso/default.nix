@@ -136,8 +136,9 @@ in
     # GitHub download (binary packages still come from cache.nixos.org).
     system.extraDependencies = [ self.inputs.nixpkgs.outPath ];
 
-    isoImage.storeContents = lib.optional (cfg.includeTargetClosure != null)
-      self.nixosConfigurations.${cfg.includeTargetClosure}.config.system.build.toplevel;
+    isoImage.storeContents = lib.optional (
+      cfg.includeTargetClosure != null
+    ) self.nixosConfigurations.${cfg.includeTargetClosure}.config.system.build.toplevel;
 
     assertions = [
       {

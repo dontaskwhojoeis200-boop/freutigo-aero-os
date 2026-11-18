@@ -59,9 +59,9 @@ rec {
 
   # Render a { file = { group = { key = value; }; }; } attrset into
   # environment.etc entries under /etc/xdg (KDE system-wide defaults).
-  mkXdgIniFiles = files:
+  mkXdgIniFiles =
+    files:
     lib.mapAttrs' (
-      file: groups:
-      lib.nameValuePair "xdg/${file}" { text = lib.generators.toINI { } groups; }
+      file: groups: lib.nameValuePair "xdg/${file}" { text = lib.generators.toINI { } groups; }
     ) files;
 }

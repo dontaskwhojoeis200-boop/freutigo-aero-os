@@ -4,10 +4,12 @@
 {
   imports = [
     ../common/desktop.nix
-    (if builtins.pathExists ./hardware-configuration.nix then
-      ./hardware-configuration.nix
-    else
-      ../common/placeholder-hardware.nix)
+    (
+      if builtins.pathExists ./hardware-configuration.nix then
+        ./hardware-configuration.nix
+      else
+        ../common/placeholder-hardware.nix
+    )
   ];
 
   networking.hostName = "freutigo-nvidia-legacy";
