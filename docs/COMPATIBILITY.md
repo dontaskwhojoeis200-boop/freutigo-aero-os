@@ -27,7 +27,7 @@ DEVELOPMENT_LOG.md.
 | desktop-nvidia-legacy | Evaluated (CI licence override) |
 | virtual-machine | **Booted in VM**: `vmtest-desktop` passes (SDDM → Plasma Wayland) |
 | vm-minimal | Evaluated (same core as `vmtest-core`) |
-| installation-iso | **Compiled** (CI, ≈1.8 GB); E2E status: see DEVELOPMENT_LOG F1 |
+| installation-iso | **Booted in VM**: E2E install + reboot passes on UEFI and BIOS (minimal) and UEFI (desktop) |
 | vmtest-core | **Passes** in CI |
 | vmtest-desktop | **Passes** in CI |
 
@@ -41,7 +41,7 @@ DEVELOPMENT_LOG.md.
 | PipeWire audio (+32-bit ALSA) | **Booted in VM** | PipeWire answers in a user session (no sound card in VM) |
 | NetworkManager, resolved, Bluetooth | **Booted in VM** | services active; no BT adapter in VM |
 | Firewall, locked root, sudo needs password | **Booted in VM** | `vmtest-core` |
-| Guided installer (`freutigo-install`) | Implemented; dry run tested; E2E: see log | |
+| Guided installer (`freutigo-install`) | **Booted in VM** (unattended E2E) | interactive prompts share the same code paths |
 | GPU auto-detection | **Tested** with 16 fixtures (incl. R9 270, HD 7850, GTX 660) | not yet on real hardware |
 | NTFS / exFAT / FAT32 / ext4 / USB | Evaluated | |
 | Firefox | Evaluated | Chromium: install path in F2 |
@@ -50,7 +50,7 @@ DEVELOPMENT_LOG.md.
 | Vulkan/OpenGL diagnostics tool | Implemented; ran in container | GPU paths unexercised |
 | Idle benchmark tool | Implemented; ran in container | |
 | Cat Arena dev shell | Evaluated | |
-| Recovery `text-console` entry | Evaluated | |
+| Recovery `text-console` entry | **Present in boot menu** (E2E serial log); not yet booted by a test | |
 
 ## Known limitations (to be confirmed, not assumed)
 

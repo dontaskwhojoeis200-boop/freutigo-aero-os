@@ -13,7 +13,7 @@ in
   options.freutigo = {
     version = lib.mkOption {
       type = lib.types.str;
-      default = "0.0.0-f0";
+      default = "0.1.0-f1";
       description = "Freutigo Aero OS version string (development phase suffix until 1.0).";
     };
 

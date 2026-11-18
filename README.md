@@ -5,10 +5,13 @@ system built on **NixOS 26.05 (Stable)** for everyday computing and gaming on
 older x86-64 hardware (reference: Pentium G2020, 8 GB DDR3, 5400 RPM HDD,
 GTX 660 / R9 270 / HD 7850).
 
-> **Status: F0 — Architecture and Build Environment (complete).**
-> All configurations *evaluate*. Nothing has been *built*, *booted* or
-> *hardware-tested* yet. See [docs/DEVELOPMENT_LOG.md](docs/DEVELOPMENT_LOG.md)
-> for the exact verification state of every component.
+> **Status: F1 — Minimal Bootable OS (complete, VM-verified).**
+> The installer ISO is built in CI, installs unattended on UEFI and BIOS,
+> and the installed system (console and Plasma desktop) boots in QEMU with
+> no failed services. **Not yet tested on real hardware.** See
+> [docs/DEVELOPMENT_LOG.md](docs/DEVELOPMENT_LOG.md) for exact evidence.
+>
+> Download: GitHub Releases (`f1` pre-release) or the `freutigo-iso` CI artifact.
 
 ## Quick start (Linux with Nix + flakes)
 
@@ -17,6 +20,7 @@ scripts/check.sh                 # evaluate every host, GPU profile and the ISO
 scripts/check.sh --full          # + lint + QEMU boot test (needs KVM + cache)
 scripts/test-vm.sh               # build & run the desktop VM (freutigo/freutigo)
 scripts/build-iso.sh             # build the installer ISO into dist/
+sudo freutigo-install            # (on the ISO) guided installation
 nix develop .#cat-arena          # C++20/Vulkan/SDL3 shell for a Linux game port
 ```
 
