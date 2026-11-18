@@ -132,7 +132,15 @@ in
         echo "FREUTIGO-AUTOINSTALL start" > /dev/ttyS0 || true
         # The installer must not power off itself: report the result first,
         # then perform the REBOOT action requested in the answers file.
-        if freutigo-install --answers /run/freutigo-answers.env --no-reboot 2>&1 | tee /dev/ttyS0; then
+        # Judge the installer's own exit status; tee keeps going even if a
+        # write to the (busy) serial port fails.
+        set +e
+        freutigo-install --answers /run/freutigo-answers.env --no-reboot 2>&1 |
+          tee --output-error=warn /dev/ttyS0
+        rc=''${PIPESTATUS[0]}
+        set -e
+        echo "FREUTIGO-AUTOINSTALL installer-exit=$rc" > /dev/ttyS0 || true
+        if [ "$rc" -eq 0 ]; then
           echo "FREUTIGO-AUTOINSTALL success" > /dev/ttyS0 || true
           action=$(sed -n 's/^REBOOT=//p' /run/freutigo-answers.env | tr -d '"' | tail -n 1)
           sync

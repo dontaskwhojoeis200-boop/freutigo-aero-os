@@ -16,7 +16,7 @@ DEVELOPMENT_LOG.md.
 | amd-modern | GCN 3+/RDNA | Evaluated | Unverified |
 | nvidia-modern | Turing+ | Evaluated | Unverified |
 | intel | Intel iGPU | Evaluated | Unverified |
-| virtual-machine | QEMU/KVM virtio-gpu | Evaluated | Unverified |
+| virtual-machine | QEMU/KVM virtio-gpu / std VGA | **Booted in VM** (CI) | Supported for testing only |
 
 ## Hosts / artifacts
 
@@ -25,19 +25,24 @@ DEVELOPMENT_LOG.md.
 | desktop-amd | Evaluated |
 | desktop-nvidia | Evaluated |
 | desktop-nvidia-legacy | Evaluated (CI licence override) |
-| virtual-machine | Evaluated |
-| installation-iso (UEFI + BIOS) | Evaluated (image derivation) |
-| vmtest-core (QEMU test) | Evaluated, not run |
+| virtual-machine | **Booted in VM**: `vmtest-desktop` passes (SDDM → Plasma Wayland) |
+| vm-minimal | Evaluated (same core as `vmtest-core`) |
+| installation-iso | **Compiled** (CI, ≈1.8 GB); E2E status: see DEVELOPMENT_LOG F1 |
+| vmtest-core | **Passes** in CI |
+| vmtest-desktop | **Passes** in CI |
 
 ## Features
 
 | Feature | Status | Notes |
 |---|---|---|
-| Plasma 6.6 Wayland session | Evaluated | |
+| Plasma 6.6 Wayland session | **Booted in VM** | SDDM password login → plasmashell + kwin_wayland, XDG_SESSION_TYPE=wayland |
 | Plasma X11 session (fallback) | Evaluated | used by nvidia-legacy-470 |
 | Aero / Aero Lite compositor defaults | Implemented (skeleton) | theme assets are F2 |
-| PipeWire audio (+32-bit ALSA) | Evaluated | |
-| NetworkManager, resolved, Bluetooth | Evaluated | |
+| PipeWire audio (+32-bit ALSA) | **Booted in VM** | PipeWire answers in a user session (no sound card in VM) |
+| NetworkManager, resolved, Bluetooth | **Booted in VM** | services active; no BT adapter in VM |
+| Firewall, locked root, sudo needs password | **Booted in VM** | `vmtest-core` |
+| Guided installer (`freutigo-install`) | Implemented; dry run tested; E2E: see log | |
+| GPU auto-detection | **Tested** with 16 fixtures (incl. R9 270, HD 7850, GTX 660) | not yet on real hardware |
 | NTFS / exFAT / FAT32 / ext4 / USB | Evaluated | |
 | Firefox | Evaluated | Chromium: install path in F2 |
 | Steam + Proton (+ Proton-GE) | Evaluated | not in ISO by design |
