@@ -52,8 +52,13 @@ pkgs.testers.runNixOSTest {
         machine.screenshot("02-plasma-session")
 
     with subtest("Session is Wayland with PipeWire running"):
-        machine.wait_until_succeeds("pgrep -u freutigo -x kwin_wayland", timeout=60)
-        machine.wait_until_succeeds("pgrep -u freutigo -x pipewire", timeout=60)
+        # NixOS wraps KWin, so match the command line, not the process name.
+        machine.wait_until_succeeds("pgrep -u freutigo -f kwin_wayland", timeout=60)
+        machine.succeed(
+            "tr '\\0' '\\n' < /proc/$(pgrep -u freutigo -f plasmashell | head -1)/environ"
+            " | grep -qx XDG_SESSION_TYPE=wayland"
+        )
+        machine.wait_until_succeeds("pgrep -u freutigo -f 'bin/pipewire( |$)'", timeout=60)
 
     with subtest("Idle memory snapshot (VM, informational only)"):
         print(machine.succeed("free -m"))
