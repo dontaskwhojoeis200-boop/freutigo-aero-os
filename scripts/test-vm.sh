@@ -41,9 +41,9 @@ args=(
   -enable-kvm -cpu host -smp 2 -m 4096
   -drive "file=$DISK,if=virtio,format=qcow2"
   -cdrom "$ISO" -boot d
-  -nic user,model=virtio-net-pci
-  -vga none -device virtio-vga-gl -display gtk,gl=on
-  -audiodev pipewire,id=snd0 -device intel-hda -device hda-output,audiodev=snd0
+  -nic "user,model=virtio-net-pci"
+  -vga none -device virtio-vga-gl -display "gtk,gl=on"
+  -audiodev "pipewire,id=snd0" -device intel-hda -device "hda-output,audiodev=snd0"
 )
 
 if [[ $FIRMWARE == uefi ]]; then

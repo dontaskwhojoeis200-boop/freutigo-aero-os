@@ -57,9 +57,9 @@ rm -f "$WORK/disk.qcow2"
 qemu-img create -q -f qcow2 "$WORK/disk.qcow2" 40G
 
 common=(
-  -machine q35,accel=kvm -cpu host -smp 2 -m 4096
+  -machine "q35,accel=kvm" -cpu host -smp 2 -m 4096
   -display none -vga std
-  -nic user,model=virtio-net-pci
+  -nic "user,model=virtio-net-pci"
   -drive "file=$WORK/disk.qcow2,if=virtio,format=qcow2"
 )
 if [[ $FIRMWARE == uefi ]]; then
