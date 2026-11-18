@@ -13,7 +13,7 @@
 set -euo pipefail
 
 ISO=""; FIRMWARE=uefi; DESKTOP=no; WORK=""
-INSTALL_TIMEOUT=${INSTALL_TIMEOUT:-5400}
+INSTALL_TIMEOUT=${INSTALL_TIMEOUT:-}
 BOOT_TIMEOUT=${BOOT_TIMEOUT:-900}
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -25,6 +25,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 [[ -f "$ISO" ]] || { echo "error: --iso PATH required" >&2; exit 2; }
+# Minimal installs download ~1 GB, the desktop several GB.
+[[ -n "$INSTALL_TIMEOUT" ]] || INSTALL_TIMEOUT=$([[ $DESKTOP == yes ]] && echo 4200 || echo 2400)
 WORK=${WORK:-$(mktemp -d)}
 mkdir -p "$WORK"
 echo "e2e: firmware=$FIRMWARE desktop=$DESKTOP workdir=$WORK"
@@ -71,14 +73,30 @@ if [[ $FIRMWARE == uefi ]]; then
   )
 fi
 
+# Run QEMU with a timeout while printing the newest serial output once a
+# minute, so CI logs show where a slow or stuck run is.
+run_qemu() {  # LABEL TIMEOUT SERIAL_LOG qemu-args...
+  local label=$1 limit=$2 serial=$3; shift 3
+  : > "$serial"
+  timeout "$limit" qemu-system-x86_64 "$@" -serial "file:$serial" &
+  local pid=$! elapsed=0 last=""
+  while kill -0 "$pid" 2>/dev/null; do
+    sleep 10; elapsed=$((elapsed + 10))
+    if (( elapsed % 60 == 0 )); then
+      last=$(tail -n 3 "$serial" 2>/dev/null | tr -d '\r' | cut -c1-160)
+      echo "e2e[$label] ${elapsed}s: ${last//$'\n'/ | }"
+    fi
+  done
+  wait "$pid"
+}
+
 # ---- phase 1: install ----------------------------------------------------------
 echo "e2e: phase 1 — installing from ISO (timeout ${INSTALL_TIMEOUT}s)"
 start=$(date +%s)
 set +e
-timeout "$INSTALL_TIMEOUT" qemu-system-x86_64 "${common[@]}" \
+run_qemu install "$INSTALL_TIMEOUT" "$WORK/serial-install.log" "${common[@]}" \
   -drive "file=$WORK/auto.img,if=virtio,format=raw,readonly=on" \
-  -cdrom "$ISO" -boot order=d \
-  -serial "file:$WORK/serial-install.log"
+  -cdrom "$ISO" -boot order=d
 rc=$?
 set -e
 echo "e2e: install phase exited rc=$rc after $(( $(date +%s) - start ))s"
@@ -93,9 +111,7 @@ fi
 echo "e2e: phase 2 — booting the installed disk (timeout ${BOOT_TIMEOUT}s)"
 start=$(date +%s)
 set +e
-timeout "$BOOT_TIMEOUT" qemu-system-x86_64 "${common[@]}" \
-  -boot order=c \
-  -serial "file:$WORK/serial-boot.log"
+run_qemu boot "$BOOT_TIMEOUT" "$WORK/serial-boot.log" "${common[@]}" -boot order=c
 rc=$?
 set -e
 echo "e2e: boot phase exited rc=$rc after $(( $(date +%s) - start ))s"

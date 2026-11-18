@@ -58,6 +58,13 @@ in
     # installer already enables them.
     isoImage.makeEfiBootable = true;
 
+    # Kernel and boot messages also on the first serial port (headless
+    # servers, remote debugging, CI). tty0 stays the primary console.
+    boot.kernelParams = [
+      "console=ttyS0,115200n8"
+      "console=tty0"
+    ];
+
     # Freutigo installs to ext4; drop ZFS (an out-of-tree kernel module that
     # can lag behind kernel updates) from the installer.
     boot.supportedFilesystems.zfs = lib.mkForce false;
