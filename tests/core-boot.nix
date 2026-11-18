@@ -44,9 +44,14 @@ pkgs.testers.runNixOSTest {
         # scripts/e2e-install-test.sh and at evaluation level for all hosts.
         machine.succeed("systemctl is-enabled bluetooth.service")
 
-    with subtest("audio stack installed for user sessions"):
-        machine.succeed("test -e /run/current-system/sw/share/pipewire")
+    with subtest("PipeWire runs in a user session"):
         machine.succeed("systemctl --global is-enabled pipewire.socket")
+        machine.succeed("loginctl enable-linger freutigo")
+        machine.wait_until_succeeds("systemctl --user -M freutigo@ is-active pipewire.socket", timeout=90)
+        machine.wait_until_succeeds(
+            "su - freutigo -c 'XDG_RUNTIME_DIR=/run/user/$(id -u) pw-cli info 0' | grep -qi core",
+            timeout=60,
+        )
 
     with subtest("security invariants"):
         machine.succeed("iptables -S nixos-fw >/dev/null 2>&1 || nft list ruleset | grep -q nixos-fw")
