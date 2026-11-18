@@ -61,7 +61,7 @@ in `/etc/freutigo` reverts edits.
 2. Mount the installed system:
    ```sh
    mount /dev/disk/by-label/FREUTIGO_ROOT /mnt
-   mount /dev/disk/by-label/FREUTIGO_EFI /mnt/boot        # UEFI only
+   mount /dev/disk/by-label/FREUTIGOEFI /mnt/boot        # UEFI only
    ```
 3. Reinstall the bootloader from the existing system configuration:
    ```sh

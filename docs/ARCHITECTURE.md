@@ -54,6 +54,33 @@ freutigo.boot.mode = "uefi";           # or "bios" (+ biosDevice)
 | `freutigo.development.enable` | `false` | gaming/development |
 | `freutigo.optimization.*` | all `false` | optimization |
 | `freutigo.iso.includeTargetClosure` | `null` | hosts/installation-iso |
+| `freutigo.testing.serialBootMarker` | `false` | core/testing (E2E test hook only) |
+
+## 2a. Hosts
+
+| Host | Purpose |
+|---|---|
+| `desktop-amd`, `desktop-nvidia`, `desktop-nvidia-legacy` | Reference desktops (placeholder hardware config until installed) |
+| `virtual-machine` | Desktop in QEMU for development |
+| `vm-minimal` | F1 minimal system: core OS + graphics stack, no desktop |
+| `installation-iso` | Installer image |
+| `local` | Exists only on installed machines: written by `freutigo-install` to `/etc/freutigo/hosts/local` |
+
+## 2b. Installer flow
+
+```
+ISO boot → freutigo-install
+  network check → locale/keymap/tz → user → freutigo-detect-gpu (+override)
+  → desktop/mode/Steam → firmware + disk (erase w/ typed confirmation | mounted)
+  → summary ("install") → partition/format (erase only)
+  → copy /etc/freutigo/source → /mnt/etc/freutigo, write hosts/local/{default,hardware-configuration}.nix
+  → git commit → nixos-install --flake /mnt/etc/freutigo#local → chpasswd → reboot
+```
+
+`freutigo-detect-gpu` decides AMD generations from the kernel's own
+`modules.alias` (a device claimable by both `radeon` and `amdgpu` is GCN 1.0/1.1),
+NVIDIA generations from nouveau's chipset log line (device-ID heuristic as
+fallback), and Intel/virtual GPUs by vendor ID.
 
 ## 3. GPU profiles (driver isolation, Rule 6)
 
@@ -109,6 +136,11 @@ one profile cannot alter another. Shared by every graphical profile:
   without a dedicated host are also checked.
 * `eval-iso-image`: the ISO image derivation.
 * `shellcheck`, `nix-format`: lint (needs building).
-* `vmtest-core`: QEMU boot test (needs building + KVM).
+* `vmtest-core`: QEMU boot test of the core OS (needs building + KVM).
+* `vmtest-desktop`: QEMU test, SDDM greeter → password login → Plasma Wayland.
+* `gpu-detect`: GPU detection fixture tests.
+
+Outside `nix flake check`: `scripts/e2e-install-test.sh` performs a real
+installation from the ISO into a QEMU disk and boots it (needs network).
 
 `scripts/check.sh` runs the evaluation checks without building anything.

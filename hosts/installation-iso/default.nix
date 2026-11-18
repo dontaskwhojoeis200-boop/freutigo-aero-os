@@ -84,11 +84,11 @@ in
       └─────────────────────────────────────────────────────────────┘
     '';
 
-    # Unattended installation: only when a disk labelled FREUTIGO_AUTO with
+    # Unattended installation: only when a disk labelled AERO_AUTO with
     # an answers.env file is attached. The answers file must itself name the
     # disk to erase (CONFIRM_ERASE), so this cannot erase anything by accident.
     systemd.services.freutigo-autoinstall = {
-      description = "Freutigo unattended installation (FREUTIGO_AUTO disk)";
+      description = "Freutigo unattended installation (AERO_AUTO disk)";
       wantedBy = [ "multi-user.target" ];
       after = [
         "network-online.target"
@@ -105,12 +105,12 @@ in
       };
       script = ''
         for _ in $(seq 1 10); do
-          [ -e /dev/disk/by-label/FREUTIGO_AUTO ] && break
+          [ -e /dev/disk/by-label/AERO_AUTO ] && break
           sleep 1
         done
-        [ -e /dev/disk/by-label/FREUTIGO_AUTO ] || exit 0
+        [ -e /dev/disk/by-label/AERO_AUTO ] || exit 0
         mkdir -p /run/freutigo-auto
-        mount -o ro /dev/disk/by-label/FREUTIGO_AUTO /run/freutigo-auto
+        mount -o ro /dev/disk/by-label/AERO_AUTO /run/freutigo-auto
         cp /run/freutigo-auto/answers.env /run/freutigo-answers.env
         umount /run/freutigo-auto
         echo "FREUTIGO-AUTOINSTALL start" > /dev/ttyS0 || true

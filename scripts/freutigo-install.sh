@@ -303,14 +303,14 @@ if [[ "$DISK_MODE" == erase ]]; then
   note "Formatting"
   run mkfs.ext4 -F -q -L FREUTIGO_ROOT "$ROOT_PART"
   if [[ "$FIRMWARE" == uefi ]]; then
-    run mkfs.fat -F 32 -n FREUTIGO_EFI /dev/disk/by-partlabel/FREUTIGO_EFI
+    run mkfs.fat -F 32 -n FREUTIGOEFI /dev/disk/by-partlabel/FREUTIGO_EFI
   fi
   run udevadm settle
   run mkdir -p "$ROOT"
   run mount /dev/disk/by-label/FREUTIGO_ROOT "$ROOT"
   if [[ "$FIRMWARE" == uefi ]]; then
     run mkdir -p "$ROOT/boot"
-    run mount -o umask=077 /dev/disk/by-label/FREUTIGO_EFI "$ROOT/boot"
+    run mount -o umask=077 /dev/disk/by-label/FREUTIGOEFI "$ROOT/boot"
   fi
 fi
 
@@ -343,7 +343,7 @@ elif [[ "$DISK_MODE" == erase ]]; then
   {
     echo "  fileSystems.\"/\" = { device = \"/dev/disk/by-label/FREUTIGO_ROOT\"; fsType = \"ext4\"; };"
     if [[ "$FIRMWARE" == uefi ]]; then
-      echo "  fileSystems.\"/boot\" = { device = \"/dev/disk/by-label/FREUTIGO_EFI\"; fsType = \"vfat\"; options = [ \"fmask=0077\" \"dmask=0077\" ]; };"
+      echo "  fileSystems.\"/boot\" = { device = \"/dev/disk/by-label/FREUTIGOEFI\"; fsType = \"vfat\"; options = [ \"fmask=0077\" \"dmask=0077\" ]; };"
     fi
   } > "$CONF/hosts/local/filesystems.fragment"
   # Insert the file systems before the final closing brace.

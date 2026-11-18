@@ -47,7 +47,7 @@ It asks, in order:
 
 * **erase**: erases one whole disk. You must type the exact disk path
   (e.g. `/dev/sda`) to confirm. The installer media cannot be selected.
-  Layout: UEFI = 1 GiB EFI (FAT32, `FREUTIGO_EFI`) + ext4 root
+  Layout: UEFI = 1 GiB EFI (FAT32, `FREUTIGOEFI`) + ext4 root
   (`FREUTIGO_ROOT`); BIOS = GPT with a 1 MiB BIOS-boot partition + ext4 root.
   No swap partition (memory optimisation is evaluated in F5).
 * **mounted**: never formats anything. Create and mount the partitions
@@ -92,7 +92,7 @@ Please report its output for the hardware matrix in COMPATIBILITY.md.
 
 ## Unattended installation
 
-Create a small FAT disk or USB stick labelled `FREUTIGO_AUTO` containing
+Create a small FAT disk or USB stick labelled `AERO_AUTO` containing
 `answers.env` and attach it when booting the ISO. The installer starts by
 itself and logs to the console and serial port:
 

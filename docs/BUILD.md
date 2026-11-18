@@ -34,6 +34,8 @@ nix build .#nixosConfigurations.desktop-amd.config.system.build.toplevel
 
 # Desktop VM (login: freutigo / freutigo — development only)
 scripts/test-vm.sh
+# Minimal console VM (core OS, no desktop), serial console in the terminal
+nix run .#vm-minimal
 
 # Installer ISO → dist/*.iso + .sha256 + .buildinfo
 scripts/build-iso.sh
@@ -43,11 +45,36 @@ scripts/build-iso.sh --offline-host <host-without-steam>   # offline installer
 scripts/test-vm.sh --iso
 scripts/test-vm.sh --iso --bios
 
+# End-to-end: install from the ISO into a blank QEMU disk, then boot it
+OVMF_CODE=… OVMF_VARS=… scripts/e2e-install-test.sh --iso dist/*.iso --firmware uefi [--desktop]
+scripts/e2e-install-test.sh --iso dist/*.iso --firmware bios
+
+# Installer dry run (no disk access): writes the generated configuration
+scripts/freutigo-install.sh --dry-run --answers answers.env --source . --target /tmp/x/etc/freutigo
+
+# GPU detection fixture tests (no hardware needed)
+tests/gpu-detect/run.sh
+
 # Development shells
 nix develop                 # nixfmt, statix, deadnix, shellcheck, qemu
 nix develop .#cat-arena     # cmake, ninja, SDL3, Vulkan headers/loader/layers, glslc, gdb, renderdoc
 nix fmt                     # format all Nix files
 ```
+
+## Continuous integration (GitHub Actions)
+
+`.github/workflows/ci.yml` runs on every push to `main`, on pull requests
+and on tags `f*`/`v*`, on GitHub's `ubuntu-24.04` runners (KVM, full access
+to cache.nixos.org):
+
+| Job | What it proves |
+|---|---|
+| eval | `scripts/check.sh` (every host, GPU profile, ISO), GPU-detection fixtures, installer dry run whose generated config is evaluated |
+| lint | shellcheck, sandboxed gpu-detect check, nixfmt (advisory) |
+| vm-tests | `vmtest-core` (core OS boots, services, security invariants), `vmtest-desktop` (SDDM → Plasma Wayland login); screenshots uploaded |
+| iso | builds the ISO with checksum + buildinfo; uploaded as artifact `freutigo-iso` |
+| e2e | `uefi-minimal`, `bios-minimal`, `uefi-desktop`: unattended install from the built ISO, then boot of the installed disk; serial logs uploaded |
+| release | on tags only: GitHub pre-release with ISO, checksum, buildinfo |
 
 ## Notes
 

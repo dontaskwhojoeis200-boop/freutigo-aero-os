@@ -39,7 +39,9 @@ pkgs.testers.runNixOSTest {
     with subtest("essential services"):
         machine.wait_for_unit("NetworkManager.service")
         machine.wait_for_unit("systemd-resolved.service")
-        machine.wait_for_unit("systemd-timesyncd.service")
+        # timesyncd: NixOS' qemu-vm module disables it inside test VMs (the
+        # guest gets time from KVM). It is checked on a real install by
+        # scripts/e2e-install-test.sh and at evaluation level for all hosts.
         machine.succeed("systemctl is-enabled bluetooth.service")
 
     with subtest("audio stack installed for user sessions"):

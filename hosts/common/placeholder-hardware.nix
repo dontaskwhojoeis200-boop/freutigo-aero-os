@@ -6,7 +6,7 @@
 # imports that instead (see docs/INSTALL.md).
 #
 # Partitions are referenced by filesystem label so the documented manual
-# partitioning procedure (labels FREUTIGO_ROOT / FREUTIGO_EFI) works without
+# partitioning procedure (labels FREUTIGO_ROOT / FREUTIGOEFI) works without
 # editing UUIDs.
 { lib, ... }:
 {
@@ -16,7 +16,7 @@
   };
 
   fileSystems."/boot" = lib.mkDefault {
-    device = "/dev/disk/by-label/FREUTIGO_EFI";
+    device = "/dev/disk/by-label/FREUTIGOEFI";
     fsType = "vfat";
     options = [
       "fmask=0077"

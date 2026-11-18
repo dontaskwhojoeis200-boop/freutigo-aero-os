@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # End-to-end installation test in QEMU:
-#   1. boot the installer ISO with a blank disk and a FREUTIGO_AUTO answers
+#   1. boot the installer ISO with a blank disk and an AERO_AUTO answers
 #      disk; freutigo-install runs unattended (real downloads from
 #      cache.nixos.org) and powers off;
 #   2. boot the installed disk without the ISO; the installed system prints
@@ -50,7 +50,7 @@ REBOOT=poweroff
 E2E_SERIAL_MARKER=yes
 EOF
 rm -f "$WORK/auto.img"
-mkfs.fat -C -n FREUTIGO_AUTO "$WORK/auto.img" 4096 >/dev/null
+mkfs.fat -C -n AERO_AUTO "$WORK/auto.img" 4096 >/dev/null
 mcopy -i "$WORK/auto.img" "$WORK/answers.env" ::answers.env
 
 rm -f "$WORK/disk.qcow2"
