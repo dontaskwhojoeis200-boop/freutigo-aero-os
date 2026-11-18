@@ -109,6 +109,9 @@ in
       serviceConfig = {
         Type = "oneshot";
         StandardOutput = "journal+console";
+        # A full installation takes many minutes; systemd's default 90 s
+        # start timeout would kill it.
+        TimeoutStartSec = "infinity";
       };
       script = ''
         set -o pipefail
@@ -126,7 +129,7 @@ in
           echo "FREUTIGO-AUTOINSTALL success" > /dev/ttyS0 || true
         else
           echo "FREUTIGO-AUTOINSTALL failed" > /dev/ttyS0 || true
-          tail -n 80 /tmp/freutigo-install.log > /dev/ttyS0 || true
+          { echo "--- tail of /tmp/freutigo-install.log ---"; tail -n 80 /tmp/freutigo-install.log; } > /dev/ttyS0 2>&1 || true
           systemctl poweroff
         fi
       '';
