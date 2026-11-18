@@ -46,8 +46,18 @@ pkgs.testers.runNixOSTest {
         machine.succeed("grep -q 'Indexing-Enabled=false' /etc/xdg/baloofilerc")
 
     with subtest("Log in through SDDM"):
-        machine.send_chars("freutigo\n")
-        machine.wait_until_succeeds("pgrep -u freutigo -f plasmashell", timeout=300)
+        # The greeter can take a moment to grab keyboard focus; retry the
+        # password entry instead of relying on a fixed delay.
+        for attempt in range(5):
+            machine.send_key("ctrl-a")
+            machine.send_chars("freutigo\n")
+            try:
+                machine.wait_until_succeeds("pgrep -u freutigo -f plasmashell", timeout=60)
+                break
+            except Exception:
+                machine.screenshot(f"login-attempt-{attempt}")
+        else:
+            raise Exception("Could not log in through SDDM after 5 attempts")
         machine.sleep(20)
         machine.screenshot("02-plasma-session")
 
