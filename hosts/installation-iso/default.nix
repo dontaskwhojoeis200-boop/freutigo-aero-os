@@ -111,6 +111,7 @@ in
         StandardOutput = "journal+console";
       };
       script = ''
+        set -o pipefail
         for _ in $(seq 1 10); do
           [ -e /dev/disk/by-label/AERO_AUTO ] && break
           sleep 1

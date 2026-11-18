@@ -88,10 +88,22 @@ is_timezone() { [[ "$1" =~ ^[A-Za-z0-9_+-]+(/[A-Za-z0-9_+-]+)*$ ]] && { [[ $DRY_
 is_keymap() {
   [[ "$1" =~ ^[A-Za-z0-9_.-]+$ ]] || return 1
   [[ $DRY_RUN -eq 1 ]] && return 0
-  local d
-  for d in /run/current-system/sw/share/keymaps /usr/share/keymaps /usr/share/kbd/keymaps; do
-    [[ -d "$d" ]] && find "$d" -name "$1.map*" -print -quit | grep -q . && return 0
+  local d lk found_dir=0
+  local -a dirs=()
+  # On NixOS the keymaps ship with the kbd package next to loadkeys.
+  if lk=$(command -v loadkeys 2>/dev/null); then
+    dirs+=("$(dirname "$(readlink -f "$lk")")/../share/keymaps")
+  fi
+  dirs+=(/run/current-system/sw/share/keymaps /usr/share/keymaps /usr/share/kbd/keymaps /lib/kbd/keymaps)
+  for d in "${dirs[@]}"; do
+    [[ -d "$d" ]] || continue
+    found_dir=1
+    find -L "$d" -name "$1.map*" -print -quit | grep -q . && return 0
   done
+  if [[ $found_dir -eq 0 ]]; then
+    log "WARN no keymap directory found; cannot validate keymap '$1'"
+    return 0
+  fi
   return 1
 }
 is_profile()  { [[ " $PROFILES auto " == *" $1 "* ]]; }
