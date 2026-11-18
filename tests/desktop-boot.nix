@@ -24,9 +24,10 @@ pkgs.testers.runNixOSTest {
       users.users.root.hashedPassword = lib.mkForce null;
       virtualisation.memorySize = 3072;
       virtualisation.cores = 2;
-      # The test harness provides its own display; drop the GL display flags
-      # used for interactive runs.
-      virtualisation.qemu.options = lib.mkForce [ ];
+      # Note: the host's interactive display flags live in
+      # virtualisation.vmVariant and do not apply inside tests. Never force
+      # virtualisation.qemu.options here: the qemu-vm module uses it for the
+      # direct kernel boot (-kernel/-initrd/-append).
     };
 
   enableOCR = false;
