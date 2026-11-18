@@ -65,6 +65,11 @@ in
       "console=tty0"
     ];
 
+    # Mirror the journal to the serial port as well (only visible to serial
+    # consoles / CI), so installer failures can be diagnosed headlessly.
+    services.journald.console = "/dev/ttyS0";
+    services.journald.extraConfig = "MaxLevelConsole=info";
+
     # Freutigo installs to ext4; drop ZFS (an out-of-tree kernel module that
     # can lag behind kernel updates) from the installer.
     boot.supportedFilesystems.zfs = lib.mkForce false;
@@ -129,7 +134,17 @@ in
           echo "FREUTIGO-AUTOINSTALL success" > /dev/ttyS0 || true
         else
           echo "FREUTIGO-AUTOINSTALL failed" > /dev/ttyS0 || true
-          { echo "--- tail of /tmp/freutigo-install.log ---"; tail -n 80 /tmp/freutigo-install.log; } > /dev/ttyS0 2>&1 || true
+          {
+            echo "--- tail of /tmp/freutigo-install.log ---"
+            tail -n 80 /tmp/freutigo-install.log
+            echo "--- memory ---"
+            free -m
+            echo "--- kernel log (tail) ---"
+            dmesg | tail -n 40
+            echo "--- journal errors ---"
+            journalctl -b -p warning --no-pager | tail -n 40
+          } > /dev/ttyS0 2>&1 || true
+          sleep 5
           systemctl poweroff
         fi
       '';

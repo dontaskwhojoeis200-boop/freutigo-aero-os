@@ -428,10 +428,13 @@ fi
 
 note "Downloading and installing the system. This takes a while (several GB for the desktop)."
 note "Progress is logged to $LOG"
+# VERBOSE=yes (answers file) streams the complete nixos-install output.
+progress_filter='^(copying path|building |error|installing the boot loader|installation finished)'
+[[ "${ANS[VERBOSE]-no}" == yes ]] && progress_filter='.'
 set +e
 nixos-install --root "$ROOT" --flake "$CONF#local" --no-root-passwd --no-channel-copy < /dev/null 2>&1 |
   tee -a "$LOG" |
-  grep --line-buffered -E "^(copying path|building '|error|installing the boot loader|installation finished)" |
+  grep --line-buffered -E "$progress_filter" |
   sed -u 's/^/    /'
 rc=${PIPESTATUS[0]}
 set -e

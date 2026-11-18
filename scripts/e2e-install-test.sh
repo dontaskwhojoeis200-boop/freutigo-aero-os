@@ -50,6 +50,7 @@ DISK=/dev/vda
 CONFIRM_ERASE=/dev/vda
 REBOOT=poweroff
 E2E_SERIAL_MARKER=yes
+VERBOSE=yes
 EOF
 rm -f "$WORK/auto.img"
 mkfs.fat -C -n AERO_AUTO "$WORK/auto.img" 4096 >/dev/null
