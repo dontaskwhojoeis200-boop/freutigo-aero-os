@@ -130,8 +130,18 @@ in
         cp /run/freutigo-auto/answers.env /run/freutigo-answers.env
         umount /run/freutigo-auto
         echo "FREUTIGO-AUTOINSTALL start" > /dev/ttyS0 || true
-        if freutigo-install --answers /run/freutigo-answers.env 2>&1 | tee /dev/ttyS0; then
+        # The installer must not power off itself: report the result first,
+        # then perform the REBOOT action requested in the answers file.
+        if freutigo-install --answers /run/freutigo-answers.env --no-reboot 2>&1 | tee /dev/ttyS0; then
           echo "FREUTIGO-AUTOINSTALL success" > /dev/ttyS0 || true
+          action=$(sed -n 's/^REBOOT=//p' /run/freutigo-answers.env | tr -d '"' | tail -n 1)
+          sync
+          umount -R /mnt 2>/dev/null || true
+          case "$action" in
+            poweroff) systemctl poweroff ;;
+            no) ;;
+            *) systemctl reboot ;;
+          esac
         else
           echo "FREUTIGO-AUTOINSTALL failed" > /dev/ttyS0 || true
           {

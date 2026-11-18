@@ -4,6 +4,9 @@
 #   sudo freutigo-install                    interactive installation
 #   sudo freutigo-install --answers FILE     unattended (KEY=value file, see
 #                                            docs/INSTALL.md "Unattended")
+#   sudo freutigo-install --answers FILE --no-reboot
+#                                            as above, but leave reboot/poweroff
+#                                            to the caller (autoinstall service)
 #   freutigo-install --dry-run [--answers FILE] --target DIR
 #                                            generate the configuration into
 #                                            DIR without touching any disk
@@ -18,6 +21,7 @@ ROOT=/mnt
 ANSWERS=""
 DRY_RUN=0
 TARGET_OVERRIDE=""
+NO_REBOOT=0
 LOG=/tmp/freutigo-install.log
 
 while [[ $# -gt 0 ]]; do
@@ -27,6 +31,7 @@ while [[ $# -gt 0 ]]; do
     --source) SOURCE="$2"; shift 2 ;;
     --root) ROOT="$2"; shift 2 ;;
     --target) TARGET_OVERRIDE="$2"; shift 2 ;;
+    --no-reboot) NO_REBOOT=1; shift ;;   # caller handles reboot/poweroff
     -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -449,6 +454,7 @@ cp "$LOG" "$ROOT/var/log/freutigo-install.log" 2>/dev/null || true
 note "${G}${B}Installation complete.${N}"
 note "Configuration: /etc/freutigo (host 'local'). Recovery: docs/RECOVERY.md"
 
+[[ $NO_REBOOT -eq 1 ]] && REBOOT=no
 case "$REBOOT" in
   yes) note "Rebooting..."; sync; umount -R "$ROOT" || true; systemctl reboot ;;
   poweroff) note "Powering off..."; sync; umount -R "$ROOT" || true; systemctl poweroff ;;

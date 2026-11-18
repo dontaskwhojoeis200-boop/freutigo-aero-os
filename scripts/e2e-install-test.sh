@@ -104,7 +104,12 @@ echo "e2e: install phase exited rc=$rc after $(( $(date +%s) - start ))s"
 grep -a "FREUTIGO-AUTOINSTALL\|^\[.*\] \|error" "$WORK/serial-install.log" | tail -n 40 || true
 if ! grep -aq "FREUTIGO-AUTOINSTALL success" "$WORK/serial-install.log"; then
   echo "e2e: FAIL — installation did not report success" >&2
-  tail -n 120 "$WORK/serial-install.log" >&2 || true
+  echo "e2e: --- power/oom/kill related lines ---" >&2
+  grep -aniE "power ?off|powering|shutdown|reboot|oom|out of memory|killed process|sigkill|sigterm|FREUTIGO-|error|Installation complete|Setting the password|installing the boot loader" \
+    "$WORK/serial-install.log" | grep -av "copying path" | head -n 150 >&2 || true
+  echo "e2e: --- serial log without download/shutdown noise (last 200 lines) ---" >&2
+  grep -avE "copying path|Deactivated successfully|Consumed .* CPU time|Stopped |Stopping |Unmount|Closed |Removed slice" \
+    "$WORK/serial-install.log" | tail -n 200 >&2 || true
   exit 1
 fi
 
