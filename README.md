@@ -3,7 +3,7 @@
 A lightweight, Windows 7 Aero / Frutiger Aero–inspired desktop operating
 system built on **NixOS 26.05 (Stable)** for everyday computing and gaming on
 older x86-64 hardware (reference: Pentium G2020, 8 GB DDR3, 5400 RPM HDD,
-GTX 660 / R9 270 / HD 7850).
+GTX 660 / R9 270 / HD 7850 / R7 250).
 
 > **Status: F1 — Minimal Bootable OS (complete, VM-verified).**
 > The installer ISO is built in CI, installs unattended on UEFI and BIOS,

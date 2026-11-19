@@ -189,8 +189,8 @@ log "PASSWORD=(hidden)"
 # ----------------------------------------------------------------- 4 gpu --
 title "4/7 Graphics"
 detected=$("${DETECT[@]}" --shell 2>>"$LOG") || die "GPU detection failed (see $LOG)"
-PROFILE=none; NVIDIA_OPEN=-; SUPPORT=none; GPU="unknown"; REASON=""
-eval "$detected"   # PROFILE NVIDIA_OPEN SUPPORT GPU REASON (shell-quoted by the detector)
+PROFILE=none; NVIDIA_OPEN=-; SUPPORT=none; GPU="unknown"; REASON=""; VRAM_MIB=""
+eval "$detected"   # PROFILE NVIDIA_OPEN SUPPORT GPU REASON VRAM_MIB (shell-quoted by the detector)
 note "Detected: $GPU"
 note "Suggested profile: ${B}$PROFILE${N} ($SUPPORT) — $REASON"
 [[ "$SUPPORT" == unsupported ]] && warn "This GPU is not a supported Freutigo GPU; the desktop may lack acceleration."
@@ -214,7 +214,14 @@ fi
 ask_yn DESKTOP "Install the Aero desktop? ('no' = text console only)" "yes"
 if [[ "$DESKTOP" == yes ]]; then
   [[ "$GPU_PROFILE" == none ]] && die "the desktop needs a graphics profile other than 'none'"
-  ask DESKTOP_MODE "Desktop mode: aero (full effects) or aero-lite (older/low-VRAM GPUs)" "aero" is_mode
+  # Cards with less than 2 GiB VRAM (e.g. many R7 250 / HD 7750 boards with
+  # 1 GiB) default to Aero Lite; the user can still choose full Aero.
+  mode_default=aero
+  if [[ "$VRAM_MIB" =~ ^[0-9]+$ ]] && (( VRAM_MIB < 2048 )); then
+    mode_default=aero-lite
+    note "Graphics memory: ${VRAM_MIB} MiB (< 2 GiB) — Aero Lite suggested"
+  fi
+  ask DESKTOP_MODE "Desktop mode: aero (full effects) or aero-lite (older/low-VRAM GPUs)" "$mode_default" is_mode
   ask_yn STEAM "Install Steam (unfree; client is downloaded from Valve on first start)?" "yes"
 else
   DESKTOP_MODE=aero; STEAM=no
@@ -287,7 +294,7 @@ title "6/7 Summary"
 cat <<EOF
   Language/keyboard/time zone : $LOCALE / $KEYMAP${XKB:+ (desktop: $XKB)} / $TIMEZONE
   Computer name / user        : $HOSTNAME / $USERNAME ($FULLNAME)
-  Graphics profile            : $GPU_PROFILE${NVIDIA_OPEN_SETTING:+ (closed kernel module)}
+  Graphics profile            : $GPU_PROFILE${NVIDIA_OPEN_SETTING:+ (closed kernel module)}${VRAM_MIB:+, ${VRAM_MIB} MiB VRAM}
   Desktop                     : $DESKTOP$([[ $DESKTOP == yes ]] && echo " ($DESKTOP_MODE)"), Steam: $STEAM
   Firmware / bootloader       : $FIRMWARE / $([[ $FIRMWARE == uefi ]] && echo systemd-boot || echo "GRUB on $BIOS_DEVICE")
   Disk                        : $([[ $DISK_MODE == erase ]] && echo "ERASE $DISK" || echo "use partitions mounted at $ROOT")

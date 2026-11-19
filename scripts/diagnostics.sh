@@ -182,12 +182,22 @@ fi
 
 # --------------------------------------------------------------------------
 section "Displays"
+analog_connected=0
 for status in /sys/class/drm/card*-*/status; do
   conn_dir=${status%/status}
   [[ "$(cat "$status")" == "connected" ]] || continue
   mode=$(head -1 "$conn_dir/modes" 2>/dev/null || echo "?")
   info "${conn_dir##*/}" "connected, preferred mode $mode"
+  case "${conn_dir##*/}" in *-VGA-*|*-DVI-I-*) analog_connected=1 ;; esac
 done
+# amdgpu's DC display code has no analog support before Linux 6.19; SI/CIK
+# cards (e.g. R7 250) must use the default legacy display path for VGA.
+if [[ $analog_connected -eq 1 ]] && grep -qw "amdgpu.dc=1" /proc/cmdline 2>/dev/null; then
+  kver=$(uname -r | cut -d. -f1-2)
+  if [[ "$(printf '%s\n6.19\n' "$kver" | sort -V | head -1)" != "6.19" ]]; then
+    warn "VGA/DVI-I connector in use with amdgpu.dc=1 on Linux $kver: analog output needs the legacy display path before 6.19 — remove amdgpu.dc=1"
+  fi
+fi
 if have kscreen-doctor && [[ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ]]; then
   kscreen-doctor -o 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -E "Output|Modes" | sed 's/^/  /' | head -10 || true
 elif have xrandr && [[ -n "${DISPLAY:-}" ]]; then

@@ -5,7 +5,7 @@ rec {
   # docs/DEVELOPMENT_LOG.md and must only be raised after real testing.
   gpuProfileInfo = {
     amd-gcn-legacy = {
-      description = "AMD GCN 1.0/1.1 (Radeon HD 7000, R7/R9 200) — amdgpu + RADV";
+      description = "AMD GCN 1.0/1.1 (Radeon HD 7000, R7 250, R9 270 and other R7/R9 200) — amdgpu + RADV";
       module = "amd-gcn.nix";
       status = "evaluated";
       experimental = false;

@@ -27,17 +27,17 @@ reliable frame-time capture (MangoHud logging, planned for F4).
 
 ## Targets vs. results
 
-| Metric | Target | R9 270 | HD 7850 | GTX 660 (nouveau) | GTX 660 (470) |
-|---|---|---|---|---|---|
-| Idle RAM used, Aero | < 1024 MiB (600–800 preferred) | PENDING | PENDING | PENDING | PENDING |
-| Idle RAM used, Aero Lite | 500–700 MiB | PENDING | PENDING | PENDING | PENDING |
-| Idle CPU busy | minimal | PENDING | PENDING | PENDING | PENDING |
-| Background disk I/O (60 s) | minimal | PENDING | PENDING | PENDING | PENDING |
-| Cold boot to desktop (HDD) | — | PENDING | PENDING | PENDING | PENDING |
-| Desktop frame pacing @1080p | smooth 60 Hz | PENDING | PENDING | PENDING | PENDING |
-| Browser startup | responsive | PENDING | PENDING | PENDING | PENDING |
-| Steam startup | functional | PENDING | PENDING | PENDING | PENDING |
-| Vulkan (vkcube / game) | verified HW accel | PENDING | PENDING | PENDING | PENDING |
+| Metric | Target | R9 270 | HD 7850 | R7 250 | GTX 660 (nouveau) | GTX 660 (470) |
+|---|---|---|---|---|---|---|
+| Idle RAM used, Aero | < 1024 MiB (600–800 preferred) | PENDING | PENDING | PENDING | PENDING | PENDING |
+| Idle RAM used, Aero Lite | 500–700 MiB | PENDING | PENDING | PENDING | PENDING | PENDING |
+| Idle CPU busy | minimal | PENDING | PENDING | PENDING | PENDING | PENDING |
+| Background disk I/O (60 s) | minimal | PENDING | PENDING | PENDING | PENDING | PENDING |
+| Cold boot to desktop (HDD) | — | PENDING | PENDING | PENDING | PENDING | PENDING |
+| Desktop frame pacing @1080p | smooth 60 Hz | PENDING | PENDING | PENDING | PENDING | PENDING |
+| Browser startup | responsive | PENDING | PENDING | PENDING | PENDING | PENDING |
+| Steam startup | functional | PENDING | PENDING | PENDING | PENDING | PENDING |
+| Vulkan (vkcube / game) | verified HW accel | PENDING | PENDING | PENDING | PENDING | PENDING |
 
 ## Tool validation (F0)
 

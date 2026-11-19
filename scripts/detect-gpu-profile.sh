@@ -12,7 +12,8 @@
 #
 # Output (default): the profile name. With --shell, KEY=value lines:
 #   PROFILE, NVIDIA_OPEN (true/false/-), SUPPORT (supported/experimental/
-#   unsupported/none), GPU (description), REASON.
+#   unsupported/none), GPU (description), REASON, VRAM_MIB (empty when not
+#   reliably known; from amdgpu sysfs or the radeon/amdgpu "VRAM: <n>M" log).
 # All findings are also explained on stderr unless --quiet.
 #
 # Test hooks (environment): FREUTIGO_SYSFS_PCI, FREUTIGO_MODULES_ALIAS,
@@ -105,12 +106,24 @@ nvidia_family_by_id() {
   fi
 }
 
-BEST_RANK=0
-PROFILE=none; NVIDIA_OPEN=-; SUPPORT=none; GPU_DESC="no GPU detected"; REASON="no PCI display controller found"
+# VRAM in MiB for an AMD GPU: exact sysfs value when amdgpu is bound,
+# otherwise the "VRAM: <n>M" line both radeon and amdgpu log at probe time.
+amd_vram_mib() {
+  local devdir=$1 slot=$2 v
+  if [[ -r "$devdir/mem_info_vram_total" ]]; then
+    v=$(cat "$devdir/mem_info_vram_total")
+    echo $(( v / 1048576 )); return
+  fi
+  grep -oE "(radeon|amdgpu) ${slot}: (amdgpu: )?VRAM: [0-9]+M" <<<"$KLOG" |
+    head -1 | grep -oE "[0-9]+M\$" | tr -d M || true
+}
 
-consider() {  # rank profile nvidia_open support desc reason
+BEST_RANK=0
+PROFILE=none; NVIDIA_OPEN=-; SUPPORT=none; GPU_DESC="no GPU detected"; REASON="no PCI display controller found"; VRAM_MIB=""
+
+consider() {  # rank profile nvidia_open support desc reason [vram_mib]
   if (( $1 > BEST_RANK )); then
-    BEST_RANK=$1; PROFILE=$2; NVIDIA_OPEN=$3; SUPPORT=$4; GPU_DESC=$5; REASON=$6
+    BEST_RANK=$1; PROFILE=$2; NVIDIA_OPEN=$3; SUPPORT=$4; GPU_DESC=$5; REASON=$6; VRAM_MIB=${7:-}
   fi
 }
 
@@ -137,12 +150,14 @@ for devdir in "$SYSFS_PCI"/*; do
         say "  modules.alias unavailable; using SI/CIK device-ID table"
         if amd_is_gcn_legacy_by_id "$dev"; then r=1; a=1; else a=1; fi
       fi
+      vram=$(amd_vram_mib "$devdir" "$slot")
+      [[ -n "$vram" ]] && { desc="$desc vram=${vram}MiB"; say "  VRAM: ${vram} MiB"; }
       if (( r && a )); then
-        consider 30 amd-gcn-legacy - supported "AMD GCN 1.0/1.1 $desc" "claimable by radeon and amdgpu -> Southern/Sea Islands; force amdgpu for Vulkan (RADV)"
+        consider 30 amd-gcn-legacy - supported "AMD GCN 1.0/1.1 $desc" "claimable by radeon and amdgpu -> Southern/Sea Islands (e.g. R7 250, HD 7850, R9 270); force amdgpu for Vulkan (RADV)" "$vram"
       elif (( a )); then
-        consider 30 amd-modern - supported "AMD GCN3+/RDNA $desc" "claimable by amdgpu only"
+        consider 30 amd-modern - supported "AMD GCN3+/RDNA $desc" "claimable by amdgpu only" "$vram"
       else
-        consider 25 amd-modern - unsupported "AMD pre-GCN $desc" "radeon-only (TeraScale or older): OpenGL via radeon, NO Vulkan; not a supported Freutigo GPU"
+        consider 25 amd-modern - unsupported "AMD pre-GCN $desc" "radeon-only (TeraScale or older): OpenGL via radeon, NO Vulkan; not a supported Freutigo GPU" "$vram"
       fi
       ;;
     10DE)
@@ -169,8 +184,8 @@ done
 say "selected profile: $PROFILE ($SUPPORT) — $REASON"
 
 if [[ $MODE == shell ]]; then
-  printf 'PROFILE=%q\nNVIDIA_OPEN=%q\nSUPPORT=%q\nGPU=%q\nREASON=%q\n' \
-    "$PROFILE" "$NVIDIA_OPEN" "$SUPPORT" "$GPU_DESC" "$REASON"
+  printf 'PROFILE=%q\nNVIDIA_OPEN=%q\nSUPPORT=%q\nGPU=%q\nREASON=%q\nVRAM_MIB=%q\n' \
+    "$PROFILE" "$NVIDIA_OPEN" "$SUPPORT" "$GPU_DESC" "$REASON" "$VRAM_MIB"
 else
   echo "$PROFILE"
 fi

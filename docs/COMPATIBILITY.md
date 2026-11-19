@@ -11,6 +11,7 @@ DEVELOPMENT_LOG.md.
 |---|---|---|---|
 | amd-gcn-legacy | Radeon R9 270 | Evaluated | Unverified |
 | amd-gcn-legacy | Radeon HD 7850 (1 GB / 2 GB) | Evaluated | Unverified |
+| amd-gcn-legacy | Radeon R7 250 / 250X / 250E (Oland, Cape Verde; 1–2 GB) | Evaluated; detection tested with fixtures for all 4 PCI IDs | Unverified |
 | nvidia-kepler-oss | GeForce GTX 660 | Evaluated | Unverified |
 | nvidia-legacy-470 | GeForce GTX 660 | Evaluated (CI licence override) | Experimental |
 | amd-modern | GCN 3+/RDNA | Evaluated | Unverified |

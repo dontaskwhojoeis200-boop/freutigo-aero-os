@@ -165,3 +165,37 @@ exercised on a physical card).
   the same code paths with answers; a keyboard-driven VM test is F2 work.
 * The `f0` git tag could not be pushed from the build session (git proxy
   refused tag pushes); tags are created through the GitHub API instead.
+
+---
+
+## F1.1 — Radeon R7 250 compatibility — 2026-11-18
+
+### Research (sources checked, not assumed)
+
+* Linux 6.18 `amdgpu_drv.c`: Oland `6608 6610 6611 6613 6631` (+ mobility
+  IDs) and Cape Verde `6820–683F` are in amdgpu's SI table.
+* pci.ids: R7 250 = `6610` (Oland XT), `682B` (Cape Verde PRO); R7 250X =
+  `683D`; R7 250E = `683F`.
+* Linux 6.18 `amdgpu_device.c`: Tahiti/Pitcairn/Verde/Oland use DC only when
+  `amdgpu.dc=1`; the default legacy display code (`dce_v6_0.c`) registers
+  DAC encoders, so VGA works. DC analog support was merged for Linux 6.19.
+  **Correction:** the F0 statement "amdgpu does not drive analog outputs" was
+  wrong for this kernel and has been fixed in HARDWARE.md.
+
+### Implemented
+
+* `freutigo-detect-gpu`: reports VRAM (`VRAM_MIB`) from amdgpu sysfs or the
+  radeon/amdgpu `VRAM: <n>M` probe line (format verified in 6.18 source).
+* `freutigo-install`: shows VRAM; defaults to Aero Lite below 2 GiB.
+* `amd-gcn-legacy`: R7 250 documented; assertion refusing `amdgpu.dc=1` on
+  kernels < 6.19 (verified to trigger on 6.18.63).
+* `freutigo-gpu-diagnostics`: warns about `amdgpu.dc=1` with a connected
+  VGA/DVI-I output on kernels < 6.19.
+* Tests: 7 new fixtures (4 R7 250 PCI IDs, VRAM from log and sysfs, with and
+  without `modules.alias`): 23/23 pass. Installer dry run with a simulated
+  1 GB Oland R7 250 selects `amd-gcn-legacy` + `aero-lite`.
+
+### Status
+
+R7 250: **Evaluated** (detection tested with fixtures). Real hardware,
+including a VGA monitor and a 1 GB DDR3 board: **Unverified**.

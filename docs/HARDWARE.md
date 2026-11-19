@@ -7,7 +7,7 @@
 | CPU | Intel Pentium G2020 (Ivy Bridge, 2C/2T) | SSE4.2/POPCNT, **no AVX**. System compiled for generic x86-64; `nixpkgs.hostPlatform.gcc.arch` is restricted to `x86-64`/`x86-64-v2` by assertion. |
 | RAM | 8 GB DDR3 | Idle target < 1 GiB used |
 | Storage | 5400 RPM SATA HDD (SSD optional) | Baloo indexing off, bounded journal, weekly fstrim (no-op on HDD) |
-| GPU | R9 270 (primary), HD 7850, GTX 660 | See profiles below |
+| GPU | R9 270 (primary), HD 7850, R7 250, GTX 660 | See profiles below |
 | Display | 1920×1080 @ 60 Hz (up to 144 Hz) | |
 
 ## AMD Radeon R9 270 / HD 7850 → `amd-gcn-legacy`
@@ -26,15 +26,61 @@ installed). Verified by evaluation: these parameters are present in the
 
 Caveats:
 
-* `amdgpu` does **not** drive analog outputs (VGA, analog part of DVI-I). Use
-  DVI-D, HDMI or DisplayPort.
-* HD 7850 boards exist with 1 GB and 2 GB VRAM. `freutigo-gpu-diagnostics`
-  reports the exact VRAM from `mem_info_vram_total` and warns below 2 GiB;
-  low-VRAM boards must be tested with Aero and Aero Lite.
+* **Analog outputs (VGA, DVI-I analog).** *Corrected in F1.1: F0 stated that
+  amdgpu cannot drive analog outputs, copied from the NixOS option text. That
+  is not true for Linux 6.18.* For SI chips (Tahiti, Pitcairn, Cape Verde,
+  Oland) Linux 6.18 keeps amdgpu on its **legacy (non-DC) display code by
+  default** (`amdgpu_device_asic_has_dc_support` returns `amdgpu_dc > 0`,
+  "systems in the wild … require LVDS and VGA support"), and that code has
+  DAC encoders, so VGA works. Only the newer DC display code lacked analog
+  support until Linux 6.19. The profile therefore **refuses `amdgpu.dc=1`
+  on kernels older than 6.19**, and `freutigo-gpu-diagnostics` warns if it is
+  set while a VGA/DVI-I connector is in use. Status: verified in kernel
+  source, **unverified on hardware**.
+* HD 7850 and R7 250 boards exist with 1 GB and 2 GB VRAM. The installer
+  reads the exact amount (amdgpu sysfs, or the driver's `VRAM: <n>M` probe
+  line) and defaults to **Aero Lite below 2 GiB**; `freutigo-gpu-diagnostics`
+  warns below 2 GiB too.
 
 Required real-hardware checks (F3): `lspci -k` shows `amdgpu`; `vulkaninfo`
 lists a RADV device; `glxinfo -B` shows radeonsi with Accelerated: yes; KWin
 compositing works on Wayland; Steam launches; vkcube runs.
+
+## AMD Radeon R7 250 → `amd-gcn-legacy`
+
+Added in F1.1. "R7 250" is sold on two different GCN 1.0 chips:
+
+| PCI ID | Chip | Retail names (pci.ids) |
+|---|---|---|
+| `1002:6610` | Oland XT | R7 250 / R7 350 / HD 8670 |
+| `1002:682B` | Cape Verde PRO | R7 250 |
+| `1002:683D` | Cape Verde XT | R7 250X (also HD 7770) |
+| `1002:683F` | Cape Verde PRO | R7 250E (also HD 7750) |
+
+All four are in Linux 6.18's amdgpu and radeon ID tables, so
+`freutigo-detect-gpu` selects `amd-gcn-legacy` from the kernel's own
+`modules.alias`; the device-ID fallback table covers them too (fixture tests
+for every variant, with and without `modules.alias`). Same driver stack as the
+R9 270: amdgpu + Mesa radeonsi (OpenGL) + RADV (Vulkan), 32-bit libraries.
+
+R7 250–specific points:
+
+* **Low VRAM and memory type.** Many boards have 1 GB, and many use DDR3 rather
+  than GDDR5 (much lower bandwidth). The installer suggests Aero Lite on
+  1 GB cards; the compositor cost of full Aero blur on DDR3 boards must be
+  measured in F5, not assumed.
+* **VGA port.** Common on these boards; supported through amdgpu's default
+  legacy display path on Linux 6.18 (see Caveats above). Do not set
+  `amdgpu.dc=1`.
+* **Oland vs. Cape Verde.** Oland is the smaller chip (fewer compute units);
+  expect lower gaming performance than Cape Verde R7 250X/250E. The Vulkan
+  version, features and extensions RADV exposes on each chip must be read with
+  `vulkaninfo` on the real card.
+* Not to be confused with Hainan (`1002:666x`): mobile-only, no display
+  engine.
+
+Required real-hardware checks: as for the R9 270, plus a VGA monitor test on
+a board with a VGA port, and Aero vs. Aero Lite on a 1 GB DDR3 board.
 
 ## NVIDIA GeForce GTX 660 → `nvidia-kepler-oss` (default for this card)
 
